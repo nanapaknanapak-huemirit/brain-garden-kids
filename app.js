@@ -248,16 +248,16 @@ const PATTERN_LEVELS = [
 ];
 
 const LOGIC_LEVELS = [
-    { items: ['🌸','🌷','🌹','🐝'], answer: 3, hint: 'Which one is an animal?' },
-    { items: ['🌳','🌲','🎄','🌻'], answer: 1, hint: 'Which one is a flower?' },
-    { items: ['🐟','🐦','🦅','🐤'], answer: 0, hint: 'Which one swims?' },
-    { items: ['🍎','🍊','🍇','🌸'], answer: 2, hint: 'Which one is a flower?' },
-    { items: ['🐢','🐛','🦋','🐘'], answer: 1, hint: 'Which one is very big?' },
-    { items: ['☀️','🌙','⭐','🌸'], answer: 0, hint: 'Which one grows in a garden?' },
-    { items: ['🌈','☀️','🌙','🍎'], answer: 2, hint: 'Which one is food?' },
-    { items: ['🍓','🍎','🍊','🌳'], answer: 1, hint: 'Which one is a tree?' },
-    { items: ['🐝','🦋','🐞','🌲'], answer: 2, hint: 'Which one is a tree?' },
-    { items: ['🥕','🍎','🍊','🌈'], answer: 0, hint: 'Which one is not food?' }
+    { items: ['🌸','🐝','🌷','🌹'], answer: 1, hint: 'Which one is an animal?' },
+    { items: ['🌳','🌻','🌲','🎄'], answer: 1, hint: 'Which one is a flower?' },
+    { items: ['🐦','🐟','🦅','🐤'], answer: 1, hint: 'Which one swims?' },
+    { items: ['🍎','🍊','🌸','🍇'], answer: 2, hint: 'Which one is a flower?' },
+    { items: ['🐘','🐢','🐛','🦋'], answer: 0, hint: 'Which one is very big?' },
+    { items: ['☀️','🌙','🌸','⭐'], answer: 2, hint: 'Which one grows in a garden?' },
+    { items: ['🌈','☀️','🍎','🌙'], answer: 2, hint: 'Which one is food?' },
+    { items: ['🍓','🌳','🍎','🍊'], answer: 1, hint: 'Which one is a tree?' },
+    { items: ['🐝','🦋','🐞','🌲'], answer: 3, hint: 'Which one is a tree?' },
+    { items: ['🥕','🍎','🌈','🍊'], answer: 2, hint: 'Which one is not food?' }
 ];
 
 function playAudio(filename) {
