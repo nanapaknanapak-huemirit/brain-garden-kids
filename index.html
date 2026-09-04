@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Garden!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="container">
+        <h1>Brain Garden!</h1>
+        <p class="subtitle" id="subtitle">Solve puzzles to grow your garden!</p>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('garden')" id="tab-garden">Garden</button>
+            <button class="nav-tab" onclick="switchTab('memory')" id="tab-memory">Memory</button>
+            <button class="nav-tab" onclick="switchTab('patterns')" id="tab-patterns">Patterns</button>
+            <button class="nav-tab" onclick="switchTab('logic')" id="tab-logic">Logic</button>
+        </div>
+
+        <div class="controls">
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en', this)">US English</button>
+                <button class="lang-btn" data-lang="es" onclick="switchLanguage('es', this)">ES Espanol</button>
+                <button class="lang-btn" data-lang="de" onclick="switchLanguage('de', this)">DE Deutsch</button>
+                <button class="lang-btn" data-lang="fr" onclick="switchLanguage('fr', this)">FR Francais</button>
+                <button class="lang-btn" data-lang="nl" onclick="switchLanguage('nl', this)">NL Nederlands</button>
+                <button class="lang-btn" data-lang="pt" onclick="switchLanguage('pt', this)">PT Portugues</button>
+                <button class="lang-btn" data-lang="it" onclick="switchLanguage('it', this)">IT Italiano</button>
+            </div>
+            <div class="speed-control">
+                <label>Speed:</label>
+                <input type="range" class="speed-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeed(this.value)">
+            </div>
+        </div>
+
+        <div class="score-display">Score: <span id="score">0</span> Stars</div>
+        <div class="progress-bar"><div class="progress" id="progress" style="width: 0%"></div></div>
+        <div class="message" id="message"></div>
+
+        <!-- Garden Tab -->
+        <div class="tab-content active" id="garden-tab">
+            <div class="garden-scene">
+                <div class="garden-zone zone-mystery locked" id="zone-mystery">
+                    <div class="zone-label" id="zone-mystery-label">Mystery Zone</div>
+                    <div class="zone-locked-msg" id="zone-mystery-msg">Solve logic puzzles to unlock!</div>
+                    <div class="zone-plants" id="zone-mystery-plants"></div>
+                </div>
+                <div class="garden-zone zone-trees" id="zone-trees">
+                    <div class="zone-label" id="zone-trees-label">Forest</div>
+                    <div class="zone-empty" id="zone-trees-empty">Solve pattern puzzles to grow trees!</div>
+                    <div class="zone-plants" id="zone-trees-plants"></div>
+                </div>
+                <div class="garden-zone zone-flowers" id="zone-flowers">
+                    <div class="zone-label" id="zone-flowers-label">Flower Garden</div>
+                    <div class="zone-empty" id="zone-flowers-empty">Solve memory puzzles to grow flowers!</div>
+                    <div class="zone-plants" id="zone-flowers-plants"></div>
+                </div>
+            </div>
+            <div class="game-buttons">
+                <button class="btn primary" onclick="switchTab('memory')">Memory</button>
+                <button class="btn primary" onclick="switchTab('patterns')">Patterns</button>
+                <button class="btn primary" onclick="switchTab('logic')">Logic</button>
+            </div>
+        </div>
+
+        <!-- Memory Tab -->
+        <div class="tab-content" id="memory-tab">
+            <div class="game-area">
+                <div class="game-title" id="memory-title">Memory Game</div>
+                <div class="game-subtitle" id="memory-subtitle">Find matching pairs!</div>
+                <div class="memory-info">
+                    <div class="memory-level" id="memory-level">Level 1</div>
+                    <div class="memory-pairs" id="memory-pairs">0 / 2 pairs found</div>
+                </div>
+                <div class="memory-grid" id="memory-grid"></div>
+                <div class="game-buttons">
+                    <button class="btn primary" id="memory-new-btn" onclick="startMemoryLevel()">New Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patterns Tab -->
+        <div class="tab-content" id="patterns-tab">
+            <div class="game-area">
+                <div class="game-title" id="patterns-title">Pattern Game</div>
+                <div class="game-subtitle" id="patterns-subtitle">What comes next?</div>
+                <div class="pattern-info">
+                    <div class="pattern-level" id="pattern-level">Level 1</div>
+                </div>
+                <div class="pattern-type-row"><span class="pattern-type-label" id="pattern-type-label">AB pattern</span></div>
+                <div class="pattern-display" id="pattern-display"></div>
+                <div class="pattern-options" id="pattern-options"></div>
+                <div class="game-buttons">
+                    <button class="btn primary" id="pattern-new-btn" onclick="startPatternLevel()">New Pattern</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logic Tab -->
+        <div class="tab-content" id="logic-tab">
+            <div class="game-area">
+                <div class="game-title" id="logic-title">Logic Game</div>
+                <div class="game-subtitle" id="logic-subtitle">Which one does not belong?</div>
+                <div class="logic-info">
+                    <div class="logic-level" id="logic-level">Level 1</div>
+                </div>
+                <div class="logic-hint" id="logic-hint"></div>
+                <div class="logic-display" id="logic-display"></div>
+                <div class="game-buttons">
+                    <button class="btn primary" id="logic-new-btn" onclick="startLogicLevel()">New Puzzle</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="link-row">
+            <a href="https://nanapaknanapak-huemirit.github.io/learn-numbers-kids/" class="link-btn">Number Adventure</a>
+            <a href="https://nanapaknanapak-huemirit.github.io/learn-letters-kids/" class="link-btn">Letter Adventure</a>
+            <a href="https://nanapaknanapak-huemirit.github.io/learn-colors-kids/" class="link-btn">Learn Colors</a>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
