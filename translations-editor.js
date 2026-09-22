@@ -119,12 +119,82 @@
         return node;
     }
 
+    var FEMALE_VOICE_TOKENS = [
+        'samantha', 'zira', 'aria', 'jenny', 'michelle', 'hazel', 'emma',
+        'anna', 'amelie', 'audrey', 'julie', 'monica', 'elvira', 'laura',
+        'helena', 'paulina', 'camila', 'ximena', 'joana', 'maria',
+        'luciana', 'raquel', 'heloisa', 'alice', 'elsa', 'federica',
+        'linda', 'fiona', 'joanna', 'karen', 'moira', 'tessa', 'veena',
+        'heera', 'kyoko', 'yuna', 'libby', 'matilda', 'susan', 'nora'
+    ];
+
+    var MALE_VOICE_TOKENS = [
+        'david', 'daniel', 'guy', 'christopher', 'thomas', 'diego',
+        'xander', 'mark', 'george', 'james', 'alex', 'miguel', 'pablo',
+        'eric', 'ryan', 'oliver', 'tony', 'jeff', 'ramon', 'giorgio',
+        'jorg', 'steffan', 'william', 'matthew'
+    ];
+
+    function pickVoice(langCode) {
+        if (typeof speechSynthesis === 'undefined' || !speechSynthesis.getVoices) return null;
+        var voices = speechSynthesis.getVoices() || [];
+        if (!voices.length) return null;
+
+        var code = normalizeLang(langCode);
+
+        function langMatches(voice) {
+            var v = normalizeLang(voice.lang);
+            return v === code || v.indexOf(code + '-') === 0 || v.indexOf(code + '_') === 0;
+        }
+
+        function isFemale(voice) {
+            var name = normalizeLang(voice.name);
+            for (var i = 0; i < FEMALE_VOICE_TOKENS.length; i += 1) {
+                if (name.indexOf(FEMALE_VOICE_TOKENS[i]) !== -1) return true;
+            }
+            return false;
+        }
+
+        function isMale(voice) {
+            var name = normalizeLang(voice.name);
+            for (var i = 0; i < MALE_VOICE_TOKENS.length; i += 1) {
+                if (name.indexOf(MALE_VOICE_TOKENS[i]) !== -1) return true;
+            }
+            return false;
+        }
+
+        function neuralBoost(voice) {
+            var name = normalizeLang(voice.name);
+            return (name.indexOf('natural') !== -1 || name.indexOf('online') !== -1 || name.indexOf('neural') !== -1) ? 1 : 0;
+        }
+
+        var best = null;
+        voices.forEach(function (voice) {
+            if (!langMatches(voice) || !isFemale(voice) || isMale(voice)) return;
+            var boost = neuralBoost(voice);
+            if (!best || boost > best.boost) best = { voice: voice, boost: boost };
+        });
+
+        return best ? best.voice : null;
+    }
+
+    function normalizeLang(value) {
+        var text = String(value || '').toLowerCase();
+        try {
+            return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        } catch (error) {
+            return text;
+        }
+    }
+
     function speak(text, code) {
         if (typeof speechSynthesis === 'undefined' || !text) return;
         speechSynthesis.cancel();
         var utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = code || currentCode || 'en';
         utterance.rate = 1;
+        var voice = pickVoice(utterance.lang);
+        if (voice) utterance.voice = voice;
         speechSynthesis.speak(utterance);
     }
 

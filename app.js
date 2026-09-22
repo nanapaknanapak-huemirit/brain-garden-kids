@@ -274,6 +274,111 @@ function toSpoken(text) {
 }
 
 /**
+ * Known female and male voice-name tokens, used to pick a friendly
+ * female voice per language. The Web Speech API exposes no gender
+ * metadata, so voice gender is inferred from the voice name.
+ */
+const FEMALE_VOICE_TOKENS = [
+    'samantha', 'zira', 'aria', 'jenny', 'michelle', 'hazel', 'emma',
+    'anna', 'amelie', 'audrey', 'julie', 'monica', 'elvira', 'laura',
+    'helena', 'paulina', 'camila', 'ximena', 'joana', 'maria',
+    'luciana', 'raquel', 'heloisa', 'alice', 'elsa', 'federica',
+    'linda', 'fiona', 'joanna', 'karen', 'moira', 'tessa', 'veena',
+    'heera', 'kyoko', 'yuna', 'libby', 'matilda', 'susan', 'nora'
+];
+
+const MALE_VOICE_TOKENS = [
+    'david', 'daniel', 'guy', 'christopher', 'thomas', 'diego',
+    'xander', 'mark', 'george', 'james', 'alex', 'miguel', 'pablo',
+    'eric', 'ryan', 'oliver', 'tony', 'jeff', 'ramon', 'giorgio',
+    'jorg', 'steffan', 'william', 'matthew'
+];
+
+/**
+ * Picks the friendliest female voice for a language code, preferring
+ * natural/neural voice lines. The browser's voice list is matched by exact
+ * language code first, then by language prefix (e.g. 'en' matches 'en-US').
+ * Returns null when no female voice is detected so the engine falls back to
+ * its default voice for that language.
+ * @param {string} langCode - Language code like 'en', 'es', 'nl'
+ * @returns {SpeechSynthesisVoice|null} Best voice or null
+ */
+function pickVoice(langCode) {
+    if (typeof speechSynthesis === 'undefined' || !speechSynthesis.getVoices) return null;
+    const voices = speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+
+    const code = normalizeLang(langCode);
+
+    function langMatches(voice) {
+        const v = normalizeLang(voice.lang);
+        return v === code || v.indexOf(code + '-') === 0 || v.indexOf(code + '_') === 0;
+    }
+
+    function isFemale(voice) {
+        const name = normalizeLang(voice.name);
+        for (let i = 0; i < FEMALE_VOICE_TOKENS.length; i += 1) {
+            if (name.indexOf(FEMALE_VOICE_TOKENS[i]) !== -1) return true;
+        }
+        return false;
+    }
+
+    function isMale(voice) {
+        const name = normalizeLang(voice.name);
+        for (let i = 0; i < MALE_VOICE_TOKENS.length; i += 1) {
+            if (name.indexOf(MALE_VOICE_TOKENS[i]) !== -1) return true;
+        }
+        return false;
+    }
+
+    function neuralBoost(voice) {
+        const name = normalizeLang(voice.name);
+        return (name.indexOf('natural') !== -1 || name.indexOf('online') !== -1 || name.indexOf('neural') !== -1) ? 1 : 0;
+    }
+
+    let best = null;
+    voices.forEach((voice) => {
+        if (!langMatches(voice) || !isFemale(voice) || isMale(voice)) return;
+        const boost = neuralBoost(voice);
+        if (!best || boost > best.boost) best = { voice, boost };
+    });
+
+    return best ? best.voice : null;
+}
+
+/**
+ * Lowercases a string and strips diacritics so voice names like
+ * 'Mónica' match their plain token 'monica'.
+ * @param {string} value - Text to normalize
+ * @returns {string} Normalized text
+ */
+function normalizeLang(value) {
+    const text = String(value || '').toLowerCase();
+    try {
+        return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    } catch (error) {
+        return text;
+    }
+}
+
+/**
+ * Warms the speechSynthesis voice list and refreshes it whenever the browser
+ * finishes loading voices, so the first utterance already has female-voice
+ * candidates to choose from.
+ */
+function warmVoices() {
+    if (typeof speechSynthesis === 'undefined' || !speechSynthesis.getVoices) return;
+    speechSynthesis.getVoices();
+    try {
+        speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices());
+    } catch (error) {
+        speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    }
+}
+
+warmVoices();
+
+/**
  * Speaks text using the free browser speechSynthesis engine, using the
  * current language and the user's chosen speech rate. Any speech already
  * playing is stopped first so words never overlap.
@@ -292,6 +397,10 @@ function speakText(text) {
         const utterance = new SpeechSynthesisUtterance(toSpoken(text));
         utterance.lang = currentLang;
         utterance.rate = speechRate;
+        const voice = pickVoice(currentLang);
+        if (voice) {
+            utterance.voice = voice;
+        }
 
         function finish() {
             utterance.removeEventListener('end', onEnd);
