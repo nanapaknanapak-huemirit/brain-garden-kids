@@ -30,7 +30,7 @@ Find the item that doesn't belong. Each solved puzzle unlocks a mystery plant.
 
 - 30 levels across 3 game types (10 each)
 - Virtual garden that grows as you play
-- Free text-to-speech for every phrase in any language
+- Pre-generated Edge TTS audio clips for every phrase in every language
 - Unlimited languages — add your own with the 🌐 Translations editor (stored in your browser)
 - Star rewards and celebration animations
 - Mobile responsive
@@ -40,12 +40,15 @@ Find the item that doesn't belong. Each solved puzzle unlocks a mystery plant.
 ## Languages
 
 Seven languages ship built-in (English, Espanol, Deutsch, Francais, Nederlands,
-Portugues, Italiano) and every word is spoken free by the browser's
-`speechSynthesis`. There is **no limit on the number of languages**: use the
-in-app Translations editor (🌐 button) to tweak an existing language or add a
-brand-new one — no audio files are needed, the browser speaks whatever language
-code you pick. New languages start in English and switch to their own words as
-you fill them in.
+Portugues, Italiano) and every word is spoken by a pre-generated MP3 — each
+clip is synthesized once with Edge TTS (same friendly female voices as the
+other apps in this family) and stored under `audio/<lang>/`. There is **no
+limit on the number of languages**: use the in-app Translations editor (🌐
+button) to tweak an existing language or add a brand-new one. Custom packs use
+Edge TTS clips too — run `generate_brain_garden_audio.py` from the repo root
+in the fedora toolbox to pre-generate `audio/<lang>/<name>.mp3` for a new
+language, then fill in the words. New languages that skip the generator are
+simply quiet until their clips exist.
 
 ## App Family
 
@@ -60,7 +63,7 @@ This app is part of a family of educational apps for kids:
 - **HTML5** - Structure
 - **CSS3** - Animations, gradients, responsive design
 - **JavaScript** - Interactive game logic
-- **Web Speech API** - Free browser text-to-speech
+- **Pre-generated Edge TTS clips** - Free synthesized MP3 speech for every phrase
 - **GitHub Pages** - Free hosting
 
 ## Project Structure

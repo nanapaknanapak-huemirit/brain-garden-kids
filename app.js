@@ -274,159 +274,122 @@ function toSpoken(text) {
 }
 
 /**
- * Known female and male voice-name tokens, used to pick a friendly
- * female voice per language. The Web Speech API exposes no gender
- * metadata, so voice gender is inferred from the voice name.
+ * Converts a spoken phrase (letters / words separated by spaces or hyphens)
+ * into the hyphenated-slug filename used by the pre-generated Edge TTS clips
+ * under audio/<lang>/. Accents are stripped so 'étoile' resolves to
+ * 'etoile.mp3'. This mirrors the slugify() used to generate the clips.
+ * @param {string} text - Phrase to turn into a filename slug
+ * @returns {string} Slug-safe filename (empty if input is empty)
  */
-const FEMALE_VOICE_TOKENS = [
-    'samantha', 'zira', 'aria', 'jenny', 'michelle', 'hazel', 'emma',
-    'anna', 'amelie', 'audrey', 'julie', 'monica', 'elvira', 'laura',
-    'helena', 'paulina', 'camila', 'ximena', 'joana', 'maria',
-    'luciana', 'raquel', 'heloisa', 'alice', 'elsa', 'federica',
-    'linda', 'fiona', 'joanna', 'karen', 'moira', 'tessa', 'veena',
-    'heera', 'kyoko', 'yuna', 'libby', 'matilda', 'susan', 'nora'
-];
-
-const MALE_VOICE_TOKENS = [
-    'david', 'daniel', 'guy', 'christopher', 'thomas', 'diego',
-    'xander', 'mark', 'george', 'james', 'alex', 'miguel', 'pablo',
-    'eric', 'ryan', 'oliver', 'tony', 'jeff', 'ramon', 'giorgio',
-    'jorg', 'steffan', 'william', 'matthew'
-];
-
-/**
- * Picks the friendliest female voice for a language code, preferring
- * natural/neural voice lines. The browser's voice list is matched by exact
- * language code first, then by language prefix (e.g. 'en' matches 'en-US').
- * Returns null when no female voice is detected so the engine falls back to
- * its default voice for that language.
- * @param {string} langCode - Language code like 'en', 'es', 'nl'
- * @returns {SpeechSynthesisVoice|null} Best voice or null
- */
-function pickVoice(langCode) {
-    if (typeof speechSynthesis === 'undefined' || !speechSynthesis.getVoices) return null;
-    const voices = speechSynthesis.getVoices() || [];
-    if (!voices.length) return null;
-
-    const code = normalizeLang(langCode);
-
-    function langMatches(voice) {
-        const v = normalizeLang(voice.lang);
-        return v === code || v.indexOf(code + '-') === 0 || v.indexOf(code + '_') === 0;
-    }
-
-    function isFemale(voice) {
-        const name = normalizeLang(voice.name);
-        for (let i = 0; i < FEMALE_VOICE_TOKENS.length; i += 1) {
-            if (name.indexOf(FEMALE_VOICE_TOKENS[i]) !== -1) return true;
-        }
-        return false;
-    }
-
-    function isMale(voice) {
-        const name = normalizeLang(voice.name);
-        for (let i = 0; i < MALE_VOICE_TOKENS.length; i += 1) {
-            if (name.indexOf(MALE_VOICE_TOKENS[i]) !== -1) return true;
-        }
-        return false;
-    }
-
-    function neuralBoost(voice) {
-        const name = normalizeLang(voice.name);
-        return (name.indexOf('natural') !== -1 || name.indexOf('online') !== -1 || name.indexOf('neural') !== -1) ? 1 : 0;
-    }
-
-    let best = null;
-    voices.forEach((voice) => {
-        if (!langMatches(voice) || !isFemale(voice) || isMale(voice)) return;
-        const boost = neuralBoost(voice);
-        if (!best || boost > best.boost) best = { voice, boost };
-    });
-
-    return best ? best.voice : null;
+function toSlug(text) {
+    return String(text || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 /**
- * Lowercases a string and strips diacritics so voice names like
- * 'Mónica' match their plain token 'monica'.
- * @param {string} value - Text to normalize
- * @returns {string} Normalized text
+ * Keeps a reusable HTMLAudioElement per filename so clips never need to be
+ * refetched from the server, and never overlap: starting a new clip stops
+ * whatever is playing.
  */
-function normalizeLang(value) {
-    const text = String(value || '').toLowerCase();
-    try {
-        return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    } catch (error) {
-        return text;
-    }
+const AUDIO_BASE_PATH = 'audio';
+const audioCache = {};
+let currentAudio = null;
+
+/**
+ * Returns the cached <audio> element for a given filename, creating and
+ * caching it on first use so repeat plays never hit the network.
+ * @param {string} filename - Clip filename (without .mp3)
+ * @returns {HTMLAudioElement} The cached audio element
+ */
+function getCachedAudio(filename) {
+    if (!filename) return null;
+    if (audioCache[filename]) return audioCache[filename];
+    const file = AUDIO_BASE_PATH + '/' + currentLang + '/' + filename + '.mp3';
+    const audio = new Audio(file);
+    audio.preload = 'auto';
+    audioCache[filename] = audio;
+    return audio;
 }
 
 /**
- * Warms the speechSynthesis voice list and refreshes it whenever the browser
- * finishes loading voices, so the first utterance already has female-voice
- * candidates to choose from.
+ * Pauses any clip currently playing so words never overlap.
  */
-function warmVoices() {
-    if (typeof speechSynthesis === 'undefined' || !speechSynthesis.getVoices) return;
-    speechSynthesis.getVoices();
-    try {
-        speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices());
-    } catch (error) {
-        speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+function stopCurrentAudio() {
+    if (currentAudio && typeof currentAudio.pause === 'function') {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
     }
+    currentAudio = null;
 }
 
-warmVoices();
-
 /**
- * Speaks text using the free browser speechSynthesis engine, using the
- * current language and the user's chosen speech rate. Any speech already
- * playing is stopped first so words never overlap.
- * @param {string} text - Text to speak (empty is a no-op)
- * @returns {Promise<void>} Resolves when speech ends or fails
+ * Plays a pre-generated Edge TTS clip for the current language at the
+ * user's chosen speech rate via the <audio> element. Stops any clip already
+ * playing first. Missing clips resolve silently so custom packs without
+ * audio stay quiet.
+ * @param {string} filename - Clip filename (without .mp3 extension)
+ * @returns {Promise<void>} Resolves when the clip ends or fails
  */
-function speakText(text) {
+function playAudio(filename) {
+    const audio = getCachedAudio(filename);
+    if (!audio) {
+        return Promise.resolve();
+    }
+
+    stopCurrentAudio();
+    currentAudio = audio;
+    audio.playbackRate = speechRate;
+
     return new Promise((resolve) => {
-        if (typeof speechSynthesis === 'undefined' || !text) {
-            resolve();
-            return;
-        }
-
-        speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(toSpoken(text));
-        utterance.lang = currentLang;
-        utterance.rate = speechRate;
-        const voice = pickVoice(currentLang);
-        if (voice) {
-            utterance.voice = voice;
-        }
-
         function finish() {
-            utterance.removeEventListener('end', onEnd);
-            utterance.removeEventListener('error', onError);
+            audio.removeEventListener('ended', onEnd);
+            audio.removeEventListener('error', onError);
             resolve();
         }
-
         function onEnd() {
             finish();
         }
-
         function onError() {
             finish();
         }
-
-        utterance.addEventListener('end', onEnd);
-        utterance.addEventListener('error', onError);
-        speechSynthesis.speak(utterance);
+        audio.addEventListener('ended', onEnd);
+        audio.addEventListener('error', onErrorhed);
+        audio.play();
     });
 }
 
-function playRandomEncouragement() {
-    const lang = languages[currentLang];
-    const phrase = lang.encouragement[Math.floor(Math.random() * lang.encouragement.length)];
-    return speakText(phrase);
+/**
+ * Speaks a pre-generated clip whose filename is the natural hyphen-slug of
+ * the phrase (e.g. messages.flowerName 'flower' -> 'flower.mp3'). Used for
+ * areas that map straight to per-word clips already covered by the audio
+ * generator (names, encouragement tokens, try-again token).
+ * @param {string} phrase - The displayed word/token whose slug names the clip
+ * @returns {Promise<void>} Resolves when the clip ends or fails
+ */
+function playAudioForWord(phrase) {
+    return playAudio(toSlug(phrase));
 }
+
+/**
+ * Plays a pre-generated encouragement clip (token already hyphen-slug,
+ * e.g. 'great-job' -> audio/<lang>/great-job.mp3).
+ * @param {string} token - Encouragement token from the language config
+ * @returns {Promise<void>} Resolves when the clip ends or fails
+ */
+function playRandomEncouragementAudio() {
+    const lang = languages[currentLang];
+    const token = lang.encouragement[Math.floor(Math.random() * lang.encouragement.length)];
+    return playAudio(token);
+}
+
+function playRandomEncouragement() {
+    return playRandomEncouragementAudio();
+}
+
 
 function updateScore() {
     document.getElementById('score').textContent = totalScore;
@@ -500,13 +463,13 @@ function switchTab(tab) {
 
     if (tab === 'memory') {
         startMemoryLevel();
-        speakText(languages[currentLang].messages.instrMemory);
+        playAudio('find-matching-pairs');
     } else if (tab === 'patterns') {
         startPatternLevel();
-        speakText(languages[currentLang].messages.instrPattern);
+        playAudio('what-comes-next');
     } else if (tab === 'logic') {
         startLogicLevel();
-        speakText(languages[currentLang].messages.instrLogic);
+        playAudio('which-one-does-not-belong');
     } else {
         updateGarden();
     }
@@ -635,7 +598,7 @@ function updateGarden() {
         span.className = 'zone-plant';
         span.textContent = p;
         span.title = m.flowerName;
-        span.onclick = () => speakText(m.flowerName);
+        span.onclick = () => playAudioForWord(m.flowerName);
         flowersEl.appendChild(span);
     });
     flowersEmpty.style.display = gardenState.flowers.length > 0 ? 'none' : 'block';
@@ -645,7 +608,7 @@ function updateGarden() {
         span.className = 'zone-plant';
         span.textContent = p;
         span.title = m.treeName;
-        span.onclick = () => speakText(m.treeName);
+        span.onclick = () => playAudioForWord(m.treeName);
         treesEl.appendChild(span);
     });
     treesEmpty.style.display = gardenState.trees.length > 0 ? 'none' : 'block';
@@ -655,7 +618,7 @@ function updateGarden() {
         span.className = 'zone-plant';
         span.textContent = p;
         span.title = m.starName;
-        span.onclick = () => speakText(m.starName);
+        span.onclick = () => playAudioForWord(m.starName);
         mysteryEl.appendChild(span);
     });
     if (gardenState.mystery.length > 0) {
@@ -725,11 +688,11 @@ function flipMemoryCard(card, div) {
                     createCelebration();
                     const plant = addPlant('flower');
                     showMessage(`${plant} ${languages[currentLang].messages.plantedFlower}!`);
-                    await speakText(languages[currentLang].messages.plantedFlower);
+                    await playAudio('you-planted-a-flower');
                     playRandomEncouragement();
                     memoryLevel++;
                     if (memoryLevel > 10) {
-                        await speakText(languages[currentLang].messages.congrats);
+                        await playAudio('congratulations-you-grew-your-garden');
                         showMessage(languages[currentLang].messages.congrats);
                         createCelebration();
                     }
@@ -744,7 +707,7 @@ function flipMemoryCard(card, div) {
                 b.card.flipped = false;
                 a.div.classList.remove('flipped');
                 b.div.classList.remove('flipped');
-                await speakText(languages[currentLang].tryAgain);
+                await playAudioForWord(languages[currentLang].tryAgain);
                 memoryFlipped = [];
                 memoryLocked = false;
             }, 800);
@@ -817,11 +780,11 @@ async function handlePatternAnswer(correct, btn, answer) {
         createParticles(btn);
         const plant = addPlant('tree');
         showMessage(`${plant} ${languages[currentLang].messages.plantedTree}!`);
-        await speakText(languages[currentLang].messages.plantedTree);
+        await playAudio('you-planted-a-tree');
         playRandomEncouragement();
         patternLevel++;
         if (patternLevel > 10) {
-            await speakText(languages[currentLang].messages.congrats);
+            await playAudio('congratulations-you-grew-your-garden');
             showMessage(languages[currentLang].messages.congrats);
             createCelebration();
         }
@@ -831,7 +794,7 @@ async function handlePatternAnswer(correct, btn, answer) {
         document.querySelectorAll('.pattern-option').forEach(o => {
             if (o.textContent === answer) o.classList.add('correct');
         });
-        await speakText(languages[currentLang].tryAgain);
+        await playAudioForWord(languages[currentLang].tryAgain);
     }
     setTimeout(() => { patternLocked = false; }, 1000);
 }
@@ -867,11 +830,11 @@ async function handleLogicAnswer(selected, answer, item, container) {
         createParticles(item);
         const plant = addPlant('mystery');
         showMessage(`${plant} ${languages[currentLang].messages.plantedStar}!`);
-        await speakText(languages[currentLang].messages.plantedStar);
+        await playAudio('you-planted-a-star');
         playRandomEncouragement();
         logicLevel++;
         if (logicLevel > 10) {
-            await speakText(languages[currentLang].messages.congrats);
+            await playAudio('congratulations-you-grew-your-garden');
             showMessage(languages[currentLang].messages.congrats);
             createCelebration();
         }
@@ -879,7 +842,7 @@ async function handleLogicAnswer(selected, answer, item, container) {
     } else {
         item.classList.add('wrong');
         container.children[answer].classList.add('correct');
-        await speakText(languages[currentLang].tryAgain);
+        await playAudioForWord(languages[currentLang].tryAgain);
     }
     setTimeout(() => { logicLocked = false; }, 1000);
 }
