@@ -30,7 +30,8 @@ Find the item that doesn't belong. Each solved puzzle unlocks a mystery plant.
 
 - 30 levels across 3 game types (10 each)
 - Virtual garden that grows as you play
-- Audio support in 7 languages
+- Free text-to-speech for every phrase in any language
+- Unlimited languages — add your own with the 🌐 Translations editor (stored in your browser)
 - Star rewards and celebration animations
 - Mobile responsive
 - Speech speed control
@@ -38,30 +39,13 @@ Find the item that doesn't belong. Each solved puzzle unlocks a mystery plant.
 
 ## Languages
 
-| Flag | Language |
-|------|----------|
-| US | English |
-| ES | Espanol |
-| DE | Deutsch |
-| FR | Francais |
-| NL | Nederlands |
-| PT | Portugues |
-| IT | Italiano |
-
-## Audio Generation
-
-Audio files are generated using Edge TTS. To regenerate:
-
-```bash
-# Install edge-tts
-pip install edge-tts
-
-# Generate all languages
-bash generate_audio.sh
-
-# Generate specific language
-bash generate_audio.sh en
-```
+Seven languages ship built-in (English, Espanol, Deutsch, Francais, Nederlands,
+Portugues, Italiano) and every word is spoken free by the browser's
+`speechSynthesis`. There is **no limit on the number of languages**: use the
+in-app Translations editor (🌐 button) to tweak an existing language or add a
+brand-new one — no audio files are needed, the browser speaks whatever language
+code you pick. New languages start in English and switch to their own words as
+you fill them in.
 
 ## App Family
 
@@ -76,18 +60,26 @@ This app is part of a family of educational apps for kids:
 - **HTML5** - Structure
 - **CSS3** - Animations, gradients, responsive design
 - **JavaScript** - Interactive game logic
-- **Edge TTS** - Natural-sounding text-to-speech audio
+- **Web Speech API** - Free browser text-to-speech
 - **GitHub Pages** - Free hosting
 
 ## Project Structure
 
 ```
 brain-garden-kids/
-├── index.html          # App structure
-├── styles.css          # All styling
-├── app.js              # Game logic
-├── qrcode.svg          # QR code for easy mobile access
-├── generate_audio.sh   # Audio generation script
-├── audio/              # Audio files per language
+├── index.html             # App structure
+├── styles.css             # All styling
+├── translations.css       # Translations editor styling
+├── app.js                 # Game logic
+├── translations.js        # Translation-pack model (unlimited languages)
+├── translations-editor.js # In-app Translations editor
+├── tests/                 # Node unit tests
+├── qrcode.svg             # QR code for easy mobile access
 └── .gitignore
+```
+
+## Testing
+
+```bash
+node --test tests/translations.test.js
 ```

@@ -135,10 +135,10 @@ h1 {
 }
 .memory-card .card-front {
     background: white; font-size: 2.5rem;
-    transform: rotateY(90deg); position: absolute; top: 0; left: 0;
+    position: absolute; top: 0; left: 0; opacity: 0;
 }
-.memory-card.flipped .card-back { transform: rotateY(90deg); }
-.memory-card.flipped .card-front { transform: rotateY(0deg); }
+.memory-card.flipped .card-back { opacity: 0; }
+.memory-card.flipped .card-front { opacity: 1; animation: cardPop 0.3s ease; }
 .memory-card.matched .card-front { background: linear-gradient(135deg, #2ed573, #17c964); }
 .memory-card:hover:not(.flipped):not(.matched) { transform: translateY(-5px); }
 .memory-card:active:not(.flipped):not(.matched) { transform: scale(0.95); }

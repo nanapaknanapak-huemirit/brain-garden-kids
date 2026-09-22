@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Garden!</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="translations.css">
 </head>
 <body>
     <div class="particles" id="particles"></div>
@@ -20,15 +21,7 @@
         </div>
 
         <div class="controls">
-            <div class="language-selector">
-                <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en', this)">US English</button>
-                <button class="lang-btn" data-lang="es" onclick="switchLanguage('es', this)">ES Espanol</button>
-                <button class="lang-btn" data-lang="de" onclick="switchLanguage('de', this)">DE Deutsch</button>
-                <button class="lang-btn" data-lang="fr" onclick="switchLanguage('fr', this)">FR Francais</button>
-                <button class="lang-btn" data-lang="nl" onclick="switchLanguage('nl', this)">NL Nederlands</button>
-                <button class="lang-btn" data-lang="pt" onclick="switchLanguage('pt', this)">PT Portugues</button>
-                <button class="lang-btn" data-lang="it" onclick="switchLanguage('it', this)">IT Italiano</button>
-            </div>
+            <div class="language-selector" id="langSelector"></div>
             <div class="speed-control">
                 <label>Speed:</label>
                 <input type="range" class="speed-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeed(this.value)">
@@ -121,6 +114,8 @@
         </div>
     </div>
 
+    <script src="translations.js"></script>
+    <script src="translations-editor.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

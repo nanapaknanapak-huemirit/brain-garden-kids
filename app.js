@@ -1,8 +1,5 @@
-const AUDIO_BASE_PATH = 'audio';
-
 let totalScore = 0;
 let currentTab = 'garden';
-let currentAudio = null;
 let currentLang = 'en';
 let speechRate = 1.0;
 
@@ -30,11 +27,12 @@ const PATTERN_TYPE_NAMES = {
     AB: 'AB', ABB: 'ABB', ABC: 'ABC', AABB: 'AABB', ABCD: 'ABCD'
 };
 
-const languages = {
+const baseLanguages = {
     en: {
         name: 'English',
+        flag: '🇺🇸',
+        tryAgain: 'try again',
         encouragement: ['great-job','excellent','well-done','amazing','perfect','you-got-it','wonderful','fantastic'],
-        tryAgain: 'try-again',
         messages: {
             garden: 'Garden', memory: 'Memory', patterns: 'Patterns', logic: 'Logic',
             subtitle: 'Solve puzzles to grow your garden!',
@@ -47,22 +45,22 @@ const languages = {
             emptyFlowers: 'Solve memory puzzles to grow flowers!',
             emptyTrees: 'Solve pattern puzzles to grow trees!',
             lockedMystery: 'Solve logic puzzles to unlock!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
+            plantedFlower: 'you planted a flower',
+            plantedTree: 'you planted a tree',
+            plantedStar: 'you planted a star',
+            congrats: 'congratulations, you grew your garden',
+            instrMemory: 'tap a card',
+            instrPattern: 'what comes next',
+            instrLogic: 'which one does not belong',
             flowerName: 'flower', treeName: 'tree', starName: 'star',
             patternType: 'pattern'
         }
     },
     es: {
         name: 'Espanol',
+        flag: '🇪🇸',
+        tryAgain: 'intenta de nuevo',
         encouragement: ['muy-bien','excelente','buen-trabajo','genial','perfecto','eres-genial','fantastico','bravo'],
-        tryAgain: 'intenta-de-nuevo',
         messages: {
             garden: 'Jardin', memory: 'Memoria', patterns: 'Patrones', logic: 'Logica',
             subtitle: 'Resuelve acertijos para hacer crecer tu jardin!',
@@ -75,22 +73,22 @@ const languages = {
             emptyFlowers: 'Resuelve memoria para cultivar flores!',
             emptyTrees: 'Resuelve patrones para cultivar arboles!',
             lockedMystery: 'Resuelve logica para desbloquear!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'has plantado una flor',
+            plantedTree: 'has plantado un arbol',
+            plantedStar: 'has plantado una estrella',
+            congrats: 'has hecho crecer tu jardin',
+            instrMemory: 'toca una carta',
+            instrPattern: 'que viene despues',
+            instrLogic: 'cual no pertenece al grupo',
+            flowerName: 'flor', treeName: 'arbol', starName: 'estrella',
+            patternType: 'patron'
         }
     },
     de: {
         name: 'Deutsch',
+        flag: '🇩🇪',
+        tryAgain: 'versuche es noch einmal',
         encouragement: ['sehr-gut','ausgezeichnet','gut-gemacht','toll','perfekt','du-bist-grossartig','fantastisch','bravo'],
-        tryAgain: 'versuch-es-nochmal',
         messages: {
             garden: 'Garten', memory: 'Gedaechtnis', patterns: 'Muster', logic: 'Logik',
             subtitle: 'Loese Raetsel um deinen Garten wachsen zu lassen!',
@@ -103,22 +101,22 @@ const languages = {
             emptyFlowers: 'Loese Gedaechtnis um Blumen zu pflanzen!',
             emptyTrees: 'Loese Muster um Baeume zu pflanzen!',
             lockedMystery: 'Loese Logik um freizuschalten!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'du hast eine Blume gepflanzt',
+            plantedTree: 'du hast einen Baum gepflanzt',
+            plantedStar: 'du hast einen Stern gepflanzt',
+            congrats: 'du hast deinen Garten wachsen lassen',
+            instrMemory: 'tippe auf eine Karte',
+            instrPattern: 'was kommt als naechstes',
+            instrLogic: 'was gehoert nicht dazu',
+            flowerName: 'Blume', treeName: 'Baum', starName: 'Stern',
+            patternType: 'Muster'
         }
     },
     fr: {
         name: 'Francais',
+        flag: '🇫🇷',
+        tryAgain: 'essaye encore',
         encouragement: ['tres-bien','excellent','bien-joue','super','parfait','tu-es-genial','fantastique','bravo'],
-        tryAgain: 'essaie-encore',
         messages: {
             garden: 'Jardin', memory: 'Memoire', patterns: 'Motifs', logic: 'Logique',
             subtitle: 'Resous des defis pour faire pousser ton jardin!',
@@ -131,22 +129,22 @@ const languages = {
             emptyFlowers: 'Resous la memoire pour planter des fleurs!',
             emptyTrees: 'Resous les motifs pour planter des arbres!',
             lockedMystery: 'Resous la logique pour debloquer!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'tu as planté une fleur',
+            plantedTree: 'tu as planté un arbre',
+            plantedStar: 'tu as planté une étoile',
+            congrats: 'tu as fait pousser ton jardin',
+            instrMemory: 'touche une carte',
+            instrPattern: 'quelle est la suite',
+            instrLogic: 'lequel ne fait pas partie du groupe',
+            flowerName: 'fleur', treeName: 'arbre', starName: 'étoile',
+            patternType: 'motif'
         }
     },
     nl: {
         name: 'Nederlands',
+        flag: '🇳🇱',
+        tryAgain: 'probeer het opnieuw',
         encouragement: ['heel-goed','uitstekend','goed-gedaan','super','perfect','je-bent-geweldig','fantastisch','bravo'],
-        tryAgain: 'probeer-het-opnieuw',
         messages: {
             garden: 'Tuin', memory: 'Geheugen', patterns: 'Patronen', logic: 'Logica',
             subtitle: 'Los puzzels op om je tuin te laten groeien!',
@@ -159,22 +157,22 @@ const languages = {
             emptyFlowers: 'Los geheugen op om bloemen te planten!',
             emptyTrees: 'Los patronen op om bomen te planten!',
             lockedMystery: 'Los logica op om vrij te spelen!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'je hebt een bloem geplant',
+            plantedTree: 'je hebt een boom geplant',
+            plantedStar: 'je hebt een ster geplant',
+            congrats: 'je hebt je tuin laten groeien',
+            instrMemory: 'tik op een kaart',
+            instrPattern: 'wat komt hierna',
+            instrLogic: 'welke hoort er niet bij',
+            flowerName: 'bloem', treeName: 'boom', starName: 'ster',
+            patternType: 'patroon'
         }
     },
     pt: {
         name: 'Portugues',
+        flag: '🇵🇹',
+        tryAgain: 'tente de novo',
         encouragement: ['muito-bem','excelente','bom-trabalho','parabens','perfeito','voce-e-incrivel','fantastico','bravo'],
-        tryAgain: 'tente-de-novo',
         messages: {
             garden: 'Jardim', memory: 'Memoria', patterns: 'Padroes', logic: 'Logica',
             subtitle: 'Resolva desafios para fazer seu jardim crescer!',
@@ -187,22 +185,22 @@ const languages = {
             emptyFlowers: 'Resolva memoria para plantar flores!',
             emptyTrees: 'Resolva padroes para plantar arvores!',
             lockedMystery: 'Resolva logica para desbloquear!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'você plantou uma flor',
+            plantedTree: 'você plantou uma árvore',
+            plantedStar: 'você plantou uma estrela',
+            congrats: 'você fez seu jardim crescer',
+            instrMemory: 'toque em uma carta',
+            instrPattern: 'qual vem depois',
+            instrLogic: 'qual não pertence ao grupo',
+            flowerName: 'flor', treeName: 'árvore', starName: 'estrela',
+            patternType: 'padrão'
         }
     },
     it: {
         name: 'Italiano',
-        encouragement: ['molto-bene','eccellente','ben-fatto','super','perfetto','sei-fantastico','fantastico','bravo'],
+        flag: '🇮🇹',
         tryAgain: 'riprova',
+        encouragement: ['molto-bene','eccellente','ben-fatto','super','perfetto','sei-fantastico','fantastico','bravo'],
         messages: {
             garden: 'Giardino', memory: 'Memoria', patterns: 'Motivi', logic: 'Logica',
             subtitle: 'Risolvi gli enigmi per far crescere il tuo giardino!',
@@ -215,19 +213,24 @@ const languages = {
             emptyFlowers: 'Risolvi la memoria per piantare fiori!',
             emptyTrees: 'Risolvi i motivi per piantare alberi!',
             lockedMystery: 'Risolvi la logica per sbloccare!',
-            levelComplete: 'level-complete',
-            plantedFlower: 'you-planted-a-flower',
-            plantedTree: 'you-planted-a-tree',
-            plantedStar: 'you-planted-a-star',
-            congrats: 'congratulations-you-grew-your-garden',
-            instrMemory: 'tap-a-card',
-            instrPattern: 'what-comes-next',
-            instrLogic: 'which-one-does-not-belong',
-            flowerName: 'flower', treeName: 'tree', starName: 'star',
-            patternType: 'pattern'
+            plantedFlower: 'hai piantato un fiore',
+            plantedTree: 'hai piantato un albero',
+            plantedStar: 'hai piantato una stella',
+            congrats: 'hai fatto crescere il tuo giardino',
+            instrMemory: 'tocca una carta',
+            instrPattern: 'cosa viene dopo',
+            instrLogic: 'quale non appartiene al gruppo',
+            flowerName: 'fiore', treeName: 'albero', starName: 'stella',
+            patternType: 'motivo'
         }
     }
 };
+
+let languages = {};
+
+function rebuildLanguages() {
+    languages = Translations.getLanguages(baseLanguages);
+}
 
 const MEMORY_LEVELS = [
     { pairs: 2 }, { pairs: 3 }, { pairs: 3 }, { pairs: 4 }, { pairs: 4 },
@@ -260,28 +263,60 @@ const LOGIC_LEVELS = [
     { items: ['🥕','🍎','🌈','🍊'], answer: 2, hint: 'Which one is not food?' }
 ];
 
-function playAudio(filename) {
-    return new Promise((resolve) => {
-        if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
-        const audio = new Audio(`${AUDIO_BASE_PATH}/${currentLang}/${filename}.mp3`);
-        currentAudio = audio;
-        audio.playbackRate = speechRate;
-        audio.onended = () => { currentAudio = null; resolve(); };
-        audio.onerror = () => { currentAudio = null; resolve(); };
-        audio.play().catch(() => { currentAudio = null; resolve(); });
-    });
+/**
+ * Converts a hyphenated phrase-id (e.g. 'great-job') into spoken text
+ * (e.g. 'great job') so text-to-speech sounds natural.
+ * @param {string} text - Raw phrase or word
+ * @returns {string} Cleaned text to speak
+ */
+function toSpoken(text) {
+    return String(text).replace(/-/g, ' ');
 }
 
-function playFlipSound() {
-    const audio = new Audio(`${AUDIO_BASE_PATH}/flip.mp3`);
-    audio.playbackRate = speechRate;
-    audio.play().catch(() => {});
+/**
+ * Speaks text using the free browser speechSynthesis engine, using the
+ * current language and the user's chosen speech rate. Any speech already
+ * playing is stopped first so words never overlap.
+ * @param {string} text - Text to speak (empty is a no-op)
+ * @returns {Promise<void>} Resolves when speech ends or fails
+ */
+function speakText(text) {
+    return new Promise((resolve) => {
+        if (typeof speechSynthesis === 'undefined' || !text) {
+            resolve();
+            return;
+        }
+
+        speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(toSpoken(text));
+        utterance.lang = currentLang;
+        utterance.rate = speechRate;
+
+        function finish() {
+            utterance.removeEventListener('end', onEnd);
+            utterance.removeEventListener('error', onError);
+            resolve();
+        }
+
+        function onEnd() {
+            finish();
+        }
+
+        function onError() {
+            finish();
+        }
+
+        utterance.addEventListener('end', onEnd);
+        utterance.addEventListener('error', onError);
+        speechSynthesis.speak(utterance);
+    });
 }
 
 function playRandomEncouragement() {
     const lang = languages[currentLang];
     const phrase = lang.encouragement[Math.floor(Math.random() * lang.encouragement.length)];
-    playAudio(phrase);
+    return speakText(phrase);
 }
 
 function updateScore() {
@@ -356,25 +391,66 @@ function switchTab(tab) {
 
     if (tab === 'memory') {
         startMemoryLevel();
-        playAudio(languages[currentLang].messages.instrMemory);
+        speakText(languages[currentLang].messages.instrMemory);
     } else if (tab === 'patterns') {
         startPatternLevel();
-        playAudio(languages[currentLang].messages.instrPattern);
+        speakText(languages[currentLang].messages.instrPattern);
     } else if (tab === 'logic') {
         startLogicLevel();
-        playAudio(languages[currentLang].messages.instrLogic);
+        speakText(languages[currentLang].messages.instrLogic);
     } else {
         updateGarden();
     }
     updateUIText();
 }
 
-function switchLanguage(lang, btn) {
+/**
+ * Renders one language button per available language (built-in + any custom
+ * languages saved through the editor) plus an editor trigger. There is no
+ * limit on the number of languages.
+ */
+function renderLanguageButtons() {
+    const selector = document.getElementById('langSelector');
+    if (!selector) return;
+    selector.innerHTML = '';
+
+    Object.keys(languages).forEach((code) => {
+        const lang = languages[code];
+        const btn = document.createElement('button');
+        btn.className = 'lang-btn' + (code === currentLang ? ' active' : '');
+        btn.dataset.lang = code;
+        btn.type = 'button';
+
+        const flag = document.createElement('span');
+        flag.className = 'flag';
+        flag.textContent = lang.flag || '🌐';
+        btn.appendChild(flag);
+        btn.appendChild(document.createTextNode(lang.name || code));
+        btn.addEventListener('click', () => switchLanguage(code));
+
+        selector.appendChild(btn);
+    });
+
+    const trigger = document.createElement('button');
+    trigger.className = 'lang-btn editor-trigger';
+    trigger.dataset.lang = 'editor';
+    trigger.type = 'button';
+    trigger.title = 'Translations';
+    trigger.textContent = '🌐';
+    trigger.addEventListener('click', () => editorApi.open());
+    selector.appendChild(trigger);
+}
+
+function switchLanguage(lang) {
+    const target = languages[lang];
+    if (!target) return;
+
     currentLang = lang;
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    localStorage.setItem('brainGarden_lang', lang);
+    renderLanguageButtons();
     updateUIText();
+    updateGarden();
+
+    localStorage.setItem('brainGarden_lang', lang);
     playRandomEncouragement();
 }
 
@@ -439,6 +515,7 @@ function updateGarden() {
     const treesEmpty = document.getElementById('zone-trees-empty');
     const mysteryZone = document.getElementById('zone-mystery');
     const mysteryMsg = document.getElementById('zone-mystery-msg');
+    const m = languages[currentLang].messages;
 
     flowersEl.innerHTML = '';
     treesEl.innerHTML = '';
@@ -448,8 +525,8 @@ function updateGarden() {
         const span = document.createElement('span');
         span.className = 'zone-plant';
         span.textContent = p;
-        span.title = languages[currentLang].messages.flowerName;
-        span.onclick = () => playAudio(languages[currentLang].messages.flowerName);
+        span.title = m.flowerName;
+        span.onclick = () => speakText(m.flowerName);
         flowersEl.appendChild(span);
     });
     flowersEmpty.style.display = gardenState.flowers.length > 0 ? 'none' : 'block';
@@ -458,8 +535,8 @@ function updateGarden() {
         const span = document.createElement('span');
         span.className = 'zone-plant';
         span.textContent = p;
-        span.title = languages[currentLang].messages.treeName;
-        span.onclick = () => playAudio(languages[currentLang].messages.treeName);
+        span.title = m.treeName;
+        span.onclick = () => speakText(m.treeName);
         treesEl.appendChild(span);
     });
     treesEmpty.style.display = gardenState.trees.length > 0 ? 'none' : 'block';
@@ -468,8 +545,8 @@ function updateGarden() {
         const span = document.createElement('span');
         span.className = 'zone-plant';
         span.textContent = p;
-        span.title = languages[currentLang].messages.starName;
-        span.onclick = () => playAudio(languages[currentLang].messages.starName);
+        span.title = m.starName;
+        span.onclick = () => speakText(m.starName);
         mysteryEl.appendChild(span);
     });
     if (gardenState.mystery.length > 0) {
@@ -518,7 +595,6 @@ function flipMemoryCard(card, div) {
     if (memoryLocked || card.flipped || card.matched) return;
     card.flipped = true;
     div.classList.add('flipped');
-    playFlipSound();
     memoryFlipped.push({ card, div });
 
     if (memoryFlipped.length === 2) {
@@ -540,11 +616,11 @@ function flipMemoryCard(card, div) {
                     createCelebration();
                     const plant = addPlant('flower');
                     showMessage(`${plant} ${languages[currentLang].messages.plantedFlower}!`);
-                    await playAudio(languages[currentLang].messages.plantedFlower);
+                    await speakText(languages[currentLang].messages.plantedFlower);
                     playRandomEncouragement();
                     memoryLevel++;
                     if (memoryLevel > 10) {
-                        await playAudio(languages[currentLang].messages.congrats);
+                        await speakText(languages[currentLang].messages.congrats);
                         showMessage(languages[currentLang].messages.congrats);
                         createCelebration();
                     }
@@ -559,7 +635,7 @@ function flipMemoryCard(card, div) {
                 b.card.flipped = false;
                 a.div.classList.remove('flipped');
                 b.div.classList.remove('flipped');
-                await playAudio(languages[currentLang].tryAgain);
+                await speakText(languages[currentLang].tryAgain);
                 memoryFlipped = [];
                 memoryLocked = false;
             }, 800);
@@ -632,11 +708,11 @@ async function handlePatternAnswer(correct, btn, answer) {
         createParticles(btn);
         const plant = addPlant('tree');
         showMessage(`${plant} ${languages[currentLang].messages.plantedTree}!`);
-        await playAudio(languages[currentLang].messages.plantedTree);
+        await speakText(languages[currentLang].messages.plantedTree);
         playRandomEncouragement();
         patternLevel++;
         if (patternLevel > 10) {
-            await playAudio(languages[currentLang].messages.congrats);
+            await speakText(languages[currentLang].messages.congrats);
             showMessage(languages[currentLang].messages.congrats);
             createCelebration();
         }
@@ -646,7 +722,7 @@ async function handlePatternAnswer(correct, btn, answer) {
         document.querySelectorAll('.pattern-option').forEach(o => {
             if (o.textContent === answer) o.classList.add('correct');
         });
-        await playAudio(languages[currentLang].tryAgain);
+        await speakText(languages[currentLang].tryAgain);
     }
     setTimeout(() => { patternLocked = false; }, 1000);
 }
@@ -682,11 +758,11 @@ async function handleLogicAnswer(selected, answer, item, container) {
         createParticles(item);
         const plant = addPlant('mystery');
         showMessage(`${plant} ${languages[currentLang].messages.plantedStar}!`);
-        await playAudio(languages[currentLang].messages.plantedStar);
+        await speakText(languages[currentLang].messages.plantedStar);
         playRandomEncouragement();
         logicLevel++;
         if (logicLevel > 10) {
-            await playAudio(languages[currentLang].messages.congrats);
+            await speakText(languages[currentLang].messages.congrats);
             showMessage(languages[currentLang].messages.congrats);
             createCelebration();
         }
@@ -694,25 +770,46 @@ async function handleLogicAnswer(selected, answer, item, container) {
     } else {
         item.classList.add('wrong');
         container.children[answer].classList.add('correct');
-        await playAudio(languages[currentLang].tryAgain);
+        await speakText(languages[currentLang].tryAgain);
     }
     setTimeout(() => { logicLocked = false; }, 1000);
 }
 
+let editorApi = null;
+
 function init() {
-    loadGarden();
+    rebuildLanguages();
+
     const savedLang = localStorage.getItem('brainGarden_lang');
     const savedSpeed = localStorage.getItem('brainGarden_speed');
     if (savedLang && languages[savedLang]) {
         currentLang = savedLang;
-        document.querySelectorAll('.lang-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.lang === savedLang);
-        });
+    } else if (!languages[currentLang]) {
+        currentLang = 'en';
     }
     if (savedSpeed) {
         speechRate = parseFloat(savedSpeed);
         document.querySelector('.speed-slider').value = savedSpeed;
     }
+
+    editorApi = TranslationsEditor.init({
+        getBaseLanguages: () => baseLanguages,
+        getCurrentLang: () => currentLang,
+        onChange: () => {
+            rebuildLanguages();
+            if (!languages[currentLang]) {
+                currentLang = 'en';
+                localStorage.setItem('brainGarden_lang', currentLang);
+            }
+            renderLanguageButtons();
+            updateUIText();
+            updateScore();
+            updateGarden();
+        }
+    });
+
+    loadGarden();
+    renderLanguageButtons();
     updateUIText();
     updateScore();
     updateGarden();
