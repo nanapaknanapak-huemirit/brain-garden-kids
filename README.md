@@ -76,6 +76,8 @@ brain-garden-kids/
 ├── app.js                 # Game logic
 ├── translations.js        # Translation-pack model (unlimited languages)
 ├── translations-editor.js # In-app Translations editor
+├── generate_brain_garden_audio.py # Edge TTS clip generator (7 languages)
+├── audio/<lang>/          # Pre-generated MP3 speech clips (7 languages)
 ├── tests/                 # Node unit tests
 ├── qrcode.svg             # QR code for easy mobile access
 └── .gitignore

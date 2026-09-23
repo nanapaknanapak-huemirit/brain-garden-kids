@@ -1,4 +1,3 @@
 .DS_Store
 node_modules/
 *.log
-generate_brain_garden_audio.py

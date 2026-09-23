@@ -264,16 +264,6 @@ const LOGIC_LEVELS = [
 ];
 
 /**
- * Converts a hyphenated phrase-id (e.g. 'great-job') into spoken text
- * (e.g. 'great job') so text-to-speech sounds natural.
- * @param {string} text - Raw phrase or word
- * @returns {string} Cleaned text to speak
- */
-function toSpoken(text) {
-    return String(text).replace(/-/g, ' ');
-}
-
-/**
  * Converts a spoken phrase (letters / words separated by spaces or hyphens)
  * into the hyphenated-slug filename used by the pre-generated Edge TTS clips
  * under audio/<lang>/. Accents are stripped so 'étoile' resolves to
@@ -291,27 +281,40 @@ function toSlug(text) {
 }
 
 /**
- * Keeps a reusable HTMLAudioElement per filename so clips never need to be
- * refetched from the server, and never overlap: starting a new clip stops
- * whatever is playing.
+ * Keeps reusable HTMLAudioElements per language and filename so clips never
+ * need to be refetched from the server, and never overlap: starting a new
+ * clip stops whatever is playing.
  */
 const AUDIO_BASE_PATH = 'audio';
-const audioCache = {};
+const audioCache = new Map();
+
+/**
+ * Monotonic id of the most recent playback call. A newer call takes
+ * ownership of the shared cached element, so an older call must detect this
+ * and quit instead of hanging on an element that was rewound and reused.
+ * @type {number}
+ */
+let audioPlayId = 0;
+
 let currentAudio = null;
 
 /**
- * Returns the cached <audio> element for a given filename, creating and
- * caching it on first use so repeat plays never hit the network.
+ * Returns the cached <audio> element for a filename in the current language,
+ * creating and caching it on first use so repeat plays never hit the network.
+ * The cache key includes the language so switching languages always plays the
+ * right clip.
  * @param {string} filename - Clip filename (without .mp3)
- * @returns {HTMLAudioElement} The cached audio element
+ * @returns {HTMLAudioElement|null} The cached audio element, or null for an
+ * empty filename
  */
 function getCachedAudio(filename) {
     if (!filename) return null;
-    if (audioCache[filename]) return audioCache[filename];
+    const key = currentLang + '/' + filename;
+    if (audioCache.get(key)) return audioCache.get(key);
     const file = AUDIO_BASE_PATH + '/' + currentLang + '/' + filename + '.mp3';
     const audio = new Audio(file);
     audio.preload = 'auto';
-    audioCache[filename] = audio;
+    audioCache.set(key, audio);
     return audio;
 }
 
@@ -329,10 +332,11 @@ function stopCurrentAudio() {
 /**
  * Plays a pre-generated Edge TTS clip for the current language at the
  * user's chosen speech rate via the <audio> element. Stops any clip already
- * playing first. Missing clips resolve silently so custom packs without
- * audio stay quiet.
+ * playing first. Missing clips and blocked autoplay resolve silently so
+ * custom packs without audio stay quiet.
  * @param {string} filename - Clip filename (without .mp3 extension)
- * @returns {Promise<void>} Resolves when the clip ends or fails
+ * @returns {Promise<void>} Resolves when the clip ends, fails, or is
+ * interrupted by a newer playback call
  */
 function playAudio(filename) {
     const audio = getCachedAudio(filename);
@@ -340,6 +344,7 @@ function playAudio(filename) {
         return Promise.resolve();
     }
 
+    const playId = ++audioPlayId;
     stopCurrentAudio();
     currentAudio = audio;
     audio.playbackRate = speechRate;
@@ -348,17 +353,33 @@ function playAudio(filename) {
         function finish() {
             audio.removeEventListener('ended', onEnd);
             audio.removeEventListener('error', onError);
+            audio.removeEventListener('pause', onStopped);
             resolve();
         }
+
         function onEnd() {
             finish();
         }
+
         function onError() {
+            // Clip missing or unplayable (e.g. custom language): stay silent
             finish();
         }
+
+        function onStopped() {
+            // Element rewound and reused by a newer playback call, so waiting
+            // for 'ended' would hang. Bail out.
+            if (playId !== audioPlayId) {
+                finish();
+            }
+        }
+
         audio.addEventListener('ended', onEnd);
-        audio.addEventListener('error', onErrorhed);
-        audio.play();
+        audio.addEventListener('error', onError);
+        audio.addEventListener('pause', onStopped);
+
+        audio.currentTime = 0;
+        audio.play().catch(() => finish());
     });
 }
 
@@ -375,21 +396,15 @@ function playAudioForWord(phrase) {
 }
 
 /**
- * Plays a pre-generated encouragement clip (token already hyphen-slug,
- * e.g. 'great-job' -> audio/<lang>/great-job.mp3).
- * @param {string} token - Encouragement token from the language config
+ * Plays a random encouragement clip (token already hyphen-slug, e.g.
+ * 'great-job' -> audio/<lang>/great-job.mp3).
  * @returns {Promise<void>} Resolves when the clip ends or fails
  */
-function playRandomEncouragementAudio() {
+function playRandomEncouragement() {
     const lang = languages[currentLang];
     const token = lang.encouragement[Math.floor(Math.random() * lang.encouragement.length)];
     return playAudio(token);
 }
-
-function playRandomEncouragement() {
-    return playRandomEncouragementAudio();
-}
-
 
 function updateScore() {
     document.getElementById('score').textContent = totalScore;
